@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../ocr_test/srcs"
+		},
+		{
+			"path": "../../../IAP_project_agenticAI/Design_Develop_and_Deploy_Multi_Agent_Systems_with_crewAI/Module2/M2L7_Adding_tools_to_your_deep_research_공유"
+		}
+	],
+	"settings": {}
+}

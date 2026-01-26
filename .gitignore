@@ -1,0 +1,6 @@
+venv_312/
+.env
+__pycache__/
+*.pyc
+models/
+.DS_Store

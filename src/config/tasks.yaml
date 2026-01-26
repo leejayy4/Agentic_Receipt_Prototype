@@ -1,0 +1,96 @@
+classify_receipt_task:
+  description: >
+    Analyze the provided receipt image at {image_path} to determine if it is a 'Scanned Receipt' or a 'Phone Photograph Receipt'.
+    
+    The key differentiating factor is the color relationship between the receipt paper and the background:
+    - If the receipt paper color and the background color are very similar (e.g., white paper on a white scanner background, or uniform lighting with no significant shadow/contrast at edges), classify it as a 'Scanned Receipt'.
+    - If there is a noticeable difference in color or significant contrast between the receipt paper and the background surface (e.g., white receipt on a dark table, visible shadows, perspective distortion), classify it as a 'Phone Photograph Receipt'.
+    
+    Use the VisionClassificationTool to perform this analysis. Formulate a specific query for the tool that incorporates these criteria.
+  expected_output: >
+    A JSON object containing:
+    {
+      "classification": "Scanned Receipt" or "Phone Photograph Receipt",
+      "confidence": "High" or "Low",
+      "reasoning": "Detailed explanation based on color similarity and background contrast."
+    }
+  agent: receipt_classifier
+
+optimize_receipt_image_task:
+  description: >
+    Based on the classification from the previous task, optimize the receipt image at {image_path}.
+    
+    1. If the classification is 'Phone Photograph Receipt':
+       - FIRST: Use the ReceiptSAMTool to find the receipt region and perform an 'OCR-safe' crop. This ensures the background is removed and only the receipt remains.
+       - SECOND: Use the ImageQualityOptimizationTool on the cropped image to deskew, denoise, and sharpen it.
+    2. If the classification is 'Scanned Receipt':
+       - Use the ImageQualityOptimizationTool directly on {image_path} to deskew, denoise, and sharpen it.
+    
+    The final goal is to create an optimized image file that is ready for OCR text extraction.
+  expected_output: >
+    A path to the final optimized image file and a brief summary of the operations performed (e.g., 'SAM crop followed by deskew and sharpening').
+  agent: image_quality_optimizer
+  context:
+    - classify_receipt_task
+
+extract_receipt_data_task:
+  description: >
+    너는 영수증 데이터 분석 전문가이다.
+    이전 단계의 처리 결과(optimize_receipt_image_task의 출력)를 참고하여 영수증 데이터({image_path})에서 5가지 핵심 데이터를 추출하라.
+    이전 태스크에서 생성된 최적화 이미지가 있다면 그것을 우선 사용하라.
+
+    ===========================
+    [추출 대상 필드 - 5가지]
+    ===========================
+    1) business_number (사업자등록번호)
+       - XXX-XX-XXXXX 형식 (10자리)
+       - 하이픈 없이 읽히면 하이픈을 보정하여 출력
+
+    2) store_name (상호명)
+       - 실제 매장/가맹점 이름 (지점명 포함)
+       - 슬로건이나 법인명보다 실제 매장명을 우선
+
+    3) total_amount (총합계)
+       - 최종 결제 금액 (정수)
+       - 쉼표 제거하여 숫자만 출력
+
+    4) transaction_datetime (거래날짜)
+       - YYYY-MM-DD HH:MM:SS 형식으로 표준화
+       - 초가 없으면 :00 추가
+
+    5) vat_amount (부가세)
+       - 부가세/VAT 금액 (정수)
+       - 명시되어 있지 않으면 null
+
+    [출력 규칙]
+    - 반드시 유효한 JSON 형식으로 출력
+    - 이미지에 없는 값은 절대 생성하지 말고 null로 출력
+    - 금액은 쉼표 제거한 정수로 출력
+  expected_output: >
+    5개 필드를 포함한 단일 JSON 객체:
+    {
+      "business_number": "XXX-XX-XXXXX",
+      "store_name": "상호명",
+      "total_amount": 금액(정수),
+      "transaction_datetime": "YYYY-MM-DD HH:MM:SS",
+      "vat_amount": 금액(정수) 또는 null
+    }
+  agent: receipt_extraction_specialist
+  context:
+    - classify_receipt_task
+    - optimize_receipt_image_task
+
+compliance_audit_task:
+  description: >
+  description: >
+    이전 단계에서 추출된 영수증 데이터(extract_receipt_data_task의 출력)를 바탕으로 법적 및 산술적 검토를 수행하라.
+    1) validate_business_number_nts 툴을 사용하여 'business_number'의 상태 유효성을 검사한다.
+    2) validate_vat_calculation 툴을 사용하여 'total_amount'와 'vat_amount'의 정합성을 검증한다.
+    
+    사업자 상태가 폐업이거나 산술 오류가 있다면 'needs_review'를 true로 설정하고 'errors'에 상세 내용을 기록하라.
+    모든 검증 결과와 함께, 이전 단계에서 추출된 5가지 핵심 데이터(extracted_data)를 반드시 포함하여 반환하라.
+  expected_output: >
+    검증 결과가 포함된 완성된 JSON 객체
+  agent: compliance_auditor
+  context:
+    - extract_receipt_data_task
