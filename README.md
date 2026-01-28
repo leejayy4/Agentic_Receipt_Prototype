@@ -3,7 +3,7 @@
 ### 1. 사전 요구 사항 (Prerequisites)
 *   OpenAI API Key
 *   국세청 사업자조회 API Key
-(두 개의 Key 모두 현재 .env 파일에 있습니다)
+\n(두 개의 Key 모두 현재 .env 파일에 있습니다)
 
 ### 2. 프로젝트 설치
 ```bash
