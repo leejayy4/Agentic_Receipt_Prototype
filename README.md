@@ -30,13 +30,13 @@ pip install -r requirements.txt
 *   프로젝트 루트의 `models` 디렉토리에 저장합니다. (폴더가 없으면 생성)
 
 ### 4. 환경 변수 설정
-프로젝트 루트 디렉토리에 `.env` 파일을 생성하고 API 키를 입력하세요.
+프로젝트 루트 디렉토리에 `.env` 파일을 생성하고 API 키를 입력하세요. (현재 .env 파일 안에 다음 API key가 존재합니다)
 ```ini
 OPENAI_API_KEY=sk-your-openai-api-key-here
 NTS_API_KEY=국세청-사업자조회-APIkey
 ```
 
-## 💻 사용 방법 (Usage)
+# 사용 방법 (Usage)
 
 터미널에서 `src/main.py`를 실행하며 처리할 **이미지의 경로**를 인자로 전달합니다.
 
@@ -44,7 +44,7 @@ NTS_API_KEY=국세청-사업자조회-APIkey
 python src/main.py "D:\Path\To\Your\receipt_image.jpg"
 ```
 
-### 실행 예시
+# 실행 예시
 ```bash
 (venv_312) D:\Agentic_Receipt_Prototype> python src/main.py "D:\Agentic_Receipt_Prototype\photo_sample\my_receipt.jpg"
 ```
